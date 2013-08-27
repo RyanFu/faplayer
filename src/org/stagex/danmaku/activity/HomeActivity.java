@@ -25,8 +25,6 @@ import android.widget.LinearLayout;
 import cn.waps.AppConnect;
 import cn.waps.UpdatePointsNotifier;
 
-import com.nmbb.oplayer.ui.MainActivity;
-
 public class HomeActivity extends Activity implements UpdatePointsNotifier {
 	private static final String LOGTAG = "HomeActivity";
 

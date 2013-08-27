@@ -19,7 +19,7 @@ public class VlcMediaPlayer extends AbsMediaPlayer {
 			if (SystemUtility.getArmFeatures() >= 0) {
 				armv7_neon = true;
 				/* neon */
-				System.loadLibrary("vlccore");
+				System.loadLibrary("vlccore_neon");
 				Log.d(LOGTAG, "检测到ARMV7-NEON的CPU架构");
 			} else {
 				armv7_neon = false;

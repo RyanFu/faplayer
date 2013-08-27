@@ -198,23 +198,28 @@ public class UserLoadActivity extends Activity {
 							temlist = infos.get(lastGroup);
 							infos.remove(lastGroup);
 						}
-						int flag1 = CheckChildName(lastGroup, splitArray[1]);
-						String[] sendUrls;
-						if (flag1 != -1) {
-							sendUrls = temlist.get(lastGroup).getSecond_url();
-							if (sendUrls == null) {
-								sendUrls = new String[1];
-							}else {
-								int size1 = sendUrls.length;
-							}
-							sendUrls[0] = splitArray[2];
-						}else{
-							ChannelInfo info = new ChannelInfo(0, splitArray[1],
+						 ChannelInfo info = new ChannelInfo(0, splitArray[1],
 									null, null, null, splitArray[2], null,
 									null, null);
 						 temlist.add(info);
 						 infos.add(lastGroup, temlist);
-						}
+//						int flag1 = CheckChildName(lastGroup, splitArray[1]);
+//						String[] sendUrls;
+//						if (flag1 != -1) {
+//							sendUrls = temlist.get(lastGroup).getSecond_url();
+//							if (sendUrls == null) {
+//								sendUrls = new String[1];
+//							}else {
+//								int size1 = sendUrls.length;
+//							}
+//							sendUrls[0] = splitArray[2];
+//						}else{
+//							ChannelInfo info = new ChannelInfo(0, splitArray[1],
+//									null, null, null, splitArray[2], null,
+//									null, null);
+//						 temlist.add(info);
+//						 infos.add(lastGroup, temlist);
+//						}
 					}else if (splitArray != null && len == 2) {
 						int flag = CheckGroupName("其他");
 						if (flag == -1) {
