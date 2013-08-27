@@ -125,7 +125,6 @@ public class ParseUtil {
 			// 探测txt文件的编码格式
 			code = codeString(tvList);
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 

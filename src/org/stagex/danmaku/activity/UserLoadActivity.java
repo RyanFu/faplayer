@@ -1,14 +1,17 @@
 package org.stagex.danmaku.activity;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.keke.player.R;
 import org.stagex.danmaku.adapter.ChannelInfo;
-import org.stagex.danmaku.adapter.ChannelLoadAdapter;
+import org.stagex.danmaku.adapter.CustomExpandableAdapter;
 import org.stagex.danmaku.util.BackupData;
-import org.stagex.danmaku.util.ParseUtil;
 
 import com.nmbb.oplayer.scanner.DbHelper;
 import com.nmbb.oplayer.scanner.POUserDefChannel;
@@ -30,8 +33,9 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -46,9 +50,10 @@ public class UserLoadActivity extends Activity {
 	private ImageView button_edit;
 //	private ImageView button_defFav;
 	/* ListView */
-	private ListView mTvList;
-	private ChannelLoadAdapter mSourceAdapter;
-	private List<ChannelInfo> infos;
+	private ExpandableListView mTvList;
+	private CustomExpandableAdapter mSourceAdapter;
+	private List<List<ChannelInfo>> infos;
+	private List<String> groupArray;
 
 	private WebView mWebView;
 
@@ -63,6 +68,8 @@ public class UserLoadActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.user_load);
 
+		groupArray = new ArrayList<String>();
+		infos = new ArrayList<List<ChannelInfo>>();
 		/* 顶部标题栏的控件 */
 		button_back = (TextView) findViewById(R.id.back_btn);
 		button_search = (ImageView) findViewById(R.id.help_btn);
@@ -77,7 +84,7 @@ public class UserLoadActivity extends Activity {
 		/* 设置监听 */
 		setListensers();
 
-		mTvList = (ListView) findViewById(R.id.tv_list);
+		mTvList = (ExpandableListView) findViewById(R.id.tv_list);
 		// 防止滑动黑屏
 		mTvList.setCacheColorHint(Color.TRANSPARENT);
 
@@ -123,21 +130,19 @@ public class UserLoadActivity extends Activity {
 			mTvList.setVisibility(View.VISIBLE);
 			mWebView.setVisibility(View.GONE);
 			// 解析本地的自定义列表
-			infos = ParseUtil.parseDef(path);
+			ReadSelfChannel(path);
 
-			mSourceAdapter = new ChannelLoadAdapter(this, infos);
+			mSourceAdapter = new CustomExpandableAdapter(this, groupArray, infos);
 			mTvList.setAdapter(mSourceAdapter);
 			// 设置监听事件
-			mTvList.setOnItemClickListener(new OnItemClickListener() {
+			mTvList.setOnChildClickListener(new OnChildClickListener() {
 				@Override
-				public void onItemClick(AdapterView<?> arg0, View arg1,
-						int arg2, long arg3) {
-					// TODO Auto-generated method stub
-					ChannelInfo info = (ChannelInfo) mTvList
-							.getItemAtPosition(arg2);
-
+				public boolean onChildClick(ExpandableListView parent, View v,
+						int groupPosition, int childPosition, long id) {
+					ChannelInfo info = (ChannelInfo) infos.get(groupPosition).get(childPosition);
 					// FIXME 2013-07-31 这里的收藏就不放入是否收藏的按钮了
 					startLiveMedia(info.getAllUrl(), info.getName(), false);
+					return false;
 				}
 			});
 			// 增加长按频道收藏功能
@@ -159,7 +164,106 @@ public class UserLoadActivity extends Activity {
 			readHtmlFormAssets();
 		}
 	}
-
+	public void ReadSelfChannel(String filename){
+		try {
+			InputStream inStream = new FileInputStream(filename);
+			if (inStream != null) {
+				InputStreamReader inputreader = new InputStreamReader(inStream);
+				 BufferedReader buffreader = new BufferedReader(inputreader);
+				 String line;
+				 String[] splitArray;
+				 int lastGroup = 0;
+				 while (( line = buffreader.readLine()) != null) {
+					 splitArray = line.split(",");
+					 int len = splitArray.length;
+					 if (splitArray != null && len == 3) {
+						 lastGroup = groupArray.size() - 1;
+						 if (lastGroup == -1) {
+							 lastGroup = 0;
+							 groupArray.add(splitArray[0]);
+						}else if (groupArray.get(lastGroup).equals(splitArray[0])) {
+							//首先检测最后一个类型
+						}else {
+							lastGroup = CheckGroupName(splitArray[0]);
+							if (lastGroup == -1) {
+								groupArray.add(splitArray[0]);
+								lastGroup = groupArray.size() - 1;
+							}
+						}
+						 List<ChannelInfo> temlist;
+						 int size = infos.size();
+						 if (size == 0 || (size - 1) < lastGroup) {
+							 temlist = new ArrayList<ChannelInfo>();
+						}else {
+							temlist = infos.get(lastGroup);
+							infos.remove(lastGroup);
+						}
+						int flag1 = CheckChildName(lastGroup, splitArray[1]);
+						String[] sendUrls;
+						if (flag1 != -1) {
+							sendUrls = temlist.get(lastGroup).getSecond_url();
+							if (sendUrls == null) {
+								sendUrls = new String[1];
+							}else {
+								int size1 = sendUrls.length;
+							}
+							sendUrls[0] = splitArray[2];
+						}else{
+							ChannelInfo info = new ChannelInfo(0, splitArray[1],
+									null, null, null, splitArray[2], null,
+									null, null);
+						 temlist.add(info);
+						 infos.add(lastGroup, temlist);
+						}
+					}else if (splitArray != null && len == 2) {
+						int flag = CheckGroupName("其他");
+						if (flag == -1) {
+							groupArray.add("其他");
+							lastGroup = groupArray.size() - 1;
+						}else {
+							lastGroup = flag;
+						}
+						ChannelInfo info = new ChannelInfo(0, splitArray[0],
+								null, null, null, splitArray[1], null,
+								null, null);
+					 List<ChannelInfo> temlist;
+					 int size = infos.size();
+					 if (size == 0 || (size -1) < lastGroup) {
+						 temlist = new ArrayList<ChannelInfo>();
+					}else {
+						 temlist = infos.get(lastGroup);
+						 infos.remove(lastGroup);
+					}
+					 temlist.add(info);
+					 infos.add(lastGroup, temlist);
+					}
+				}
+				 buffreader.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public int CheckGroupName(String name){
+		int count = groupArray.size();
+		for (int i = 0; i < count; i++) {
+			if (name.equals(groupArray.get(i))) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	public int CheckChildName(int index, String name){
+		int count = infos.size();
+		for (int i = 0; i < count; i++) {
+			if (name.equals(infos.get(index).get(i).getName())) {
+				return i;
+			}
+		}
+		return -1;
+	}
 	// Listen for button clicks
 	private void setListensers() {
 		button_back.setOnClickListener(goListener);
