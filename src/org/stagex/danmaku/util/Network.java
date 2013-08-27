@@ -36,11 +36,15 @@ public class Network {
 	 */
 	public boolean isMobileNetwork() {
 		if (connManager != null) {
-			State mobile = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState();
-	        if(mobile==State.CONNECTED||mobile==State.CONNECTING)
-	        	return true;
+			NetworkInfo info = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+			if (info != null) {
+				State mobile = info.getState();
+		        if (mobile != null) {
+		        	if(mobile == State.CONNECTED || mobile == State.CONNECTING)
+			        	return true;
+				}
+			}
 		}
-
 		return false;
 	}
 }
