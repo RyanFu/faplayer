@@ -217,7 +217,7 @@ public class ParseUtil {
 	 * @return 文件编码格式
 	 * @throws Exception
 	 */
-	private static String codeString(String fileName) throws Exception {
+	public static String codeString(String fileName) throws Exception {
 		BufferedInputStream bin = new BufferedInputStream(new FileInputStream(
 				fileName));
 		int p = (bin.read() << 8) + bin.read();

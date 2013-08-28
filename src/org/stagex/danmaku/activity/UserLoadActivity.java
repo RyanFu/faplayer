@@ -12,6 +12,7 @@ import org.keke.player.R;
 import org.stagex.danmaku.adapter.ChannelInfo;
 import org.stagex.danmaku.adapter.CustomExpandableAdapter;
 import org.stagex.danmaku.util.BackupData;
+import org.stagex.danmaku.util.ParseUtil;
 
 import com.nmbb.oplayer.scanner.DbHelper;
 import com.nmbb.oplayer.scanner.POUserDefChannel;
@@ -37,7 +38,6 @@ import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
 public class UserLoadActivity extends Activity {
@@ -168,8 +168,15 @@ public class UserLoadActivity extends Activity {
 		try {
 			InputStream inStream = new FileInputStream(filename);
 			if (inStream != null) {
-				InputStreamReader inputreader = new InputStreamReader(inStream);
-				 BufferedReader buffreader = new BufferedReader(inputreader);
+				String code = "GBK";
+				try {
+					// 探测txt文件的编码格式
+					code = ParseUtil.codeString(filename);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+				InputStreamReader inputreader = new InputStreamReader(inStream, code);
+				BufferedReader buffreader = new BufferedReader(inputreader);
 				 String line;
 				 String[] splitArray;
 				 int lastGroup = 0;
@@ -184,7 +191,7 @@ public class UserLoadActivity extends Activity {
 						}else if (groupArray.get(lastGroup).equals(splitArray[0])) {
 							//首先检测最后一个类型
 						}else {
-							lastGroup = CheckGroupName(splitArray[0]);
+							lastGroup = CheckGroupName(splitArray[0].toString().trim());
 							if (lastGroup == -1) {
 								groupArray.add(splitArray[0]);
 								lastGroup = groupArray.size() - 1;
@@ -203,23 +210,6 @@ public class UserLoadActivity extends Activity {
 									null, null);
 						 temlist.add(info);
 						 infos.add(lastGroup, temlist);
-//						int flag1 = CheckChildName(lastGroup, splitArray[1]);
-//						String[] sendUrls;
-//						if (flag1 != -1) {
-//							sendUrls = temlist.get(lastGroup).getSecond_url();
-//							if (sendUrls == null) {
-//								sendUrls = new String[1];
-//							}else {
-//								int size1 = sendUrls.length;
-//							}
-//							sendUrls[0] = splitArray[2];
-//						}else{
-//							ChannelInfo info = new ChannelInfo(0, splitArray[1],
-//									null, null, null, splitArray[2], null,
-//									null, null);
-//						 temlist.add(info);
-//						 infos.add(lastGroup, temlist);
-//						}
 					}else if (splitArray != null && len == 2) {
 						int flag = CheckGroupName("其他");
 						if (flag == -1) {
@@ -228,7 +218,7 @@ public class UserLoadActivity extends Activity {
 						}else {
 							lastGroup = flag;
 						}
-						ChannelInfo info = new ChannelInfo(0, splitArray[0],
+					ChannelInfo info = new ChannelInfo(0, splitArray[0],
 								null, null, null, splitArray[1], null,
 								null, null);
 					 List<ChannelInfo> temlist;
@@ -253,7 +243,7 @@ public class UserLoadActivity extends Activity {
 	public int CheckGroupName(String name){
 		int count = groupArray.size();
 		for (int i = 0; i < count; i++) {
-			if (name.equals(groupArray.get(i))) {
+			if (groupArray.get(i).equals(name)) {
 				return i;
 			}
 		}
